@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.*;
+
 
 /**
  * This is the provided NumberTriangle class to be used in this coding task.
@@ -88,9 +90,21 @@ public class NumberTriangle {
      *
      */
     public int retrieve(String path) {
-        // TODO implement this method
-        return -1;
+        if (path == null) throw new IllegalArgumentException("path cannot be null");
+        NumberTriangle cur = this;
+        for (int k = 0; k < path.length(); k++) {
+            char c = path.charAt(k);
+            if (c == 'l') {
+                cur = cur.left;
+            } else if (c == 'r') {
+                cur = cur.right;
+            } else {
+                throw new IllegalArgumentException("Invalid character in path: " + c);
+            }
+        }
+        return cur.root;
     }
+
 
     /** Read in the NumberTriangle structure from a file.
      *
@@ -104,32 +118,41 @@ public class NumberTriangle {
      * @throws IOException may naturally occur if an issue reading the file occurs
      */
     public static NumberTriangle loadTriangle(String fname) throws IOException {
-        // open the file and get a BufferedReader object whose methods
-        // are more convenient to work with when reading the file contents.
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
+        if (inputStream == null) throw new FileNotFoundException("File not found: " + fname);
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
-
-        // TODO define any variables that you want to use to store things
-
-        // will need to return the top of the NumberTriangle,
-        // so might want a variable for that.
         NumberTriangle top = null;
+        List<NumberTriangle> prevRow = null;
 
         String line = br.readLine();
         while (line != null) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                String[] toks = trimmed.split("\\s+");
+                List<NumberTriangle> currRow = new ArrayList<>(toks.length);
+                for (String t : toks) {
+                    currRow.add(new NumberTriangle(Integer.parseInt(t)));
+                }
 
-            // remove when done; this line is included so running starter code prints the contents of the file
-            System.out.println(line);
+                if (prevRow == null) {
+                    // first row = root
+                    top = currRow.get(0);
+                } else {
+                    for (int j = 0; j < prevRow.size(); j++) {
+                        prevRow.get(j).setLeft(currRow.get(j));
+                        prevRow.get(j).setRight(currRow.get(j + 1));
+                    }
+                }
 
-            // TODO process the line
-
-            //read the next line
+                prevRow = currRow;
+            }
             line = br.readLine();
         }
         br.close();
         return top;
     }
+
 
     public static void main(String[] args) throws IOException {
 
@@ -142,3 +165,4 @@ public class NumberTriangle {
         System.out.println(mt.getRoot());
     }
 }
+// NOTE: retrieve(path) accepts only 'l' and 'r' characters.
